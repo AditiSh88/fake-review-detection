@@ -3,8 +3,9 @@ import os
 import sys
 import matplotlib.pyplot as plt
 from wordcloud import WordCloud
+import shap
 
-# Import fixes
+# Fix path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
 from preprocessing import clean_text
@@ -12,38 +13,56 @@ from utils.model_loader import load_models
 from utils.explain import get_top_words
 from utils.report import generate_report
 
-tfidf, logreg = load_models()
+tfidf, logreg, xgb = load_models()
 
-st.title("🔍 Review Analysis")
+st.set_page_config(layout="wide")
 
-text = st.text_area("Enter Review")
+# header
+st.title("🚀 AI Review Analyzer")
 
-if st.button("Analyze") and text.strip() != "":
+st.markdown("---")
 
+# input
+text = st.text_area("Enter Review", height=120)
+
+model_choice = st.selectbox(
+    "Select Model",
+    ["Logistic Regression", "XGBoost"]
+)
+
+analyze = st.button("Analyze Review")
+
+# analysis
+if analyze and text.strip() != "":
     cleaned = clean_text(text)
     vec = tfidf.transform([cleaned])
 
-    prob = logreg.predict_proba(vec)[0][1]
+    model = logreg if model_choice == "Logistic Regression" else xgb
+
+    prob = model.predict_proba(vec)[0][1]
     pred = 1 if prob > 0.5 else 0
-
-    # result
-    st.subheader("📌 Prediction")
-
-    if pred == 1:
-        st.error("⚠️ Fake Review Detected")
-    else:
-        st.success("✅ Genuine Review")
-
     confidence = prob if pred == 1 else (1 - prob)
 
-    st.subheader("📊 Confidence")
-    st.progress(float(confidence))
-    st.write(f"{confidence:.2f}")
+    
+    # ui cards
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown("### 📌 Prediction")
+        if pred == 1:
+            st.error("⚠️ Fake Review")
+        else:
+            st.success("✅ Genuine Review")
+
+    with col2:
+        st.markdown("### 📊 Confidence")
+        st.progress(float(confidence))
+        st.write(f"{confidence:.2f}")
 
     st.markdown("---")
 
     # explainability
-    st.subheader("🔍 Why this prediction?")
+    st.subheader("🔍 Important Words")
 
     words = get_top_words(tfidf, logreg, vec)
 
@@ -52,20 +71,47 @@ if st.button("Analyze") and text.strip() != "":
 
     st.markdown("---")
 
-    
+    # shap explainability
+    st.subheader("🧠 SHAP Explainability")
+
+    try:
+        explainer = shap.Explainer(model, vec)
+        shap_values = explainer(vec)
+
+        fig = plt.figure()
+        shap.plots.bar(shap_values[0], show=False)
+        st.pyplot(fig)
+
+    except Exception as e:
+        st.warning("SHAP not supported for this model input format.")
+
+    st.markdown("---")
+
     # wordcloud
     st.subheader("☁️ WordCloud")
 
     wc = WordCloud().generate(cleaned)
-
-    fig = plt.figure()
+    fig_wc = plt.figure()
     plt.imshow(wc)
     plt.axis("off")
-    st.pyplot(fig)
+    st.pyplot(fig_wc)
 
     st.markdown("---")
 
-    # report download
+    # model comparison
+    st.subheader("⚖️ Model Comparison")
+
+    prob_lr = logreg.predict_proba(vec)[0][1]
+    prob_xgb = xgb.predict_proba(vec)[0][1]
+
+    col3, col4 = st.columns(2)
+
+    col3.metric("Logistic Regression", f"{prob_lr:.2f}")
+    col4.metric("XGBoost", f"{prob_xgb:.2f}")
+
+    st.markdown("---")
+
+    # report
     if st.button("📄 Generate Report"):
         file = generate_report(text, pred, confidence)
         with open(file, "rb") as f:
