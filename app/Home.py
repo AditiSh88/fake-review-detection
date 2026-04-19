@@ -6,7 +6,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 st.set_page_config(page_title="AI Review Analyzer", layout="wide")
 
-st.markdown("# AI Review Analyzer")
+st.markdown("#AI Review Analyzer")
 st.markdown("### Detect Fake Reviews with Explainable AI")
 
 metrics_path = os.path.join(BASE_DIR, "models/metrics.json")
