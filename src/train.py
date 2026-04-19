@@ -105,7 +105,7 @@ def main():
     pickle.dump(xgb, open("models/xgb.pkl", "wb"))
 
     print("\nModels saved successfully")
--
+
     # save metrics
     metrics = {
         "accuracy": float(accuracy_score(y_test, y_pred_xgb)),
