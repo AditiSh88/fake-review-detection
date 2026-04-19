@@ -1,5 +1,12 @@
 pandas
 numpy
 scikit-learn
-nltk
+xgboost
+matplotlib
+seaborn
 streamlit
+nltk
+shap
+transformers
+torch
+wordcloud
