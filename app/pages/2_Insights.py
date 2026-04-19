@@ -35,7 +35,7 @@ st.subheader("ROC Curve")
 fpr, tpr, _ = roc_curve(y_true, y_pred)
 roc_auc = auc(fpr, tpr)
 
-fig2, ax2 = plt.subplots(figsize=(3, 2)
+fig2, ax2 = plt.subplots(figsize=(3, 2))
 ax2.plot(fpr, tpr, label=f"AUC={roc_auc:.2f}")
 ax2.plot([0,1],[0,1])
 ax2.legend()
