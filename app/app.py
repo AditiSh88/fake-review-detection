@@ -1,5 +1,8 @@
 import streamlit as st
 import pickle
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 from preprocessing import clean_text
 
 tfidf = pickle.load(open("models/tfidf.pkl", "rb"))
