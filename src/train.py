@@ -119,6 +119,19 @@ def main():
 
     print("\nModels saved successfully in /models folder")
 
+import json
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+
+metrics = {
+    "accuracy": float(accuracy_score(y_test, y_pred_xgb)),
+    "precision": float(precision_score(y_test, y_pred_xgb)),
+    "recall": float(recall_score(y_test, y_pred_xgb)),
+    "f1": float(f1_score(y_test, y_pred_xgb))
+}
+
+with open("models/metrics.json", "w") as f:
+    json.dump(metrics, f)
+
 # run
 if __name__ == "__main__":
     main()
