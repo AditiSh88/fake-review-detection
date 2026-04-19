@@ -62,7 +62,10 @@ if st.button("Analyze") and text.strip() != "":
     with col1:
         st.markdown('<div class="card">', unsafe_allow_html=True)
         st.subheader("Prediction")
-        st.success("Genuine Review") if pred == 0 else st.error("Fake Review")
+        if pred == 0:
+            st.success("Genuine Review")
+        else:
+            st.error("Fake Review")
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col2:
