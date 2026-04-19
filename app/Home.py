@@ -6,7 +6,25 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 st.set_page_config(page_title="AI Review Analyzer", layout="wide")
 
-st.markdown("#AI Review Analyzer")
+# ---------- CSS ----------
+st.markdown("""
+<style>
+.fade-in { animation: fadeIn 1s ease-in; }
+@keyframes fadeIn {
+from {opacity:0; transform: translateY(10px);}
+to {opacity:1; transform: translateY(0);}
+}
+.card {
+padding:20px;
+border-radius:12px;
+background:#111827;
+box-shadow:0 4px 20px rgba(0,0,0,0.3);
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ---------- HEADER ----------
+st.markdown("<h1 class='fade-in'>🚀 AI Review Analyzer</h1>", unsafe_allow_html=True)
 st.markdown("### Detect Fake Reviews with Explainable AI")
 
 metrics_path = os.path.join(BASE_DIR, "models/metrics.json")
