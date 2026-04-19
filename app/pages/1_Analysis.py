@@ -115,7 +115,6 @@ if st.button("Analyze") and text.strip() != "":
 
     st.markdown("---")
 
-    # ---------- SHAP ----------
     st.subheader("SHAP Explainability")
 
     try:
@@ -142,7 +141,7 @@ if st.button("Analyze") and text.strip() != "":
     st.pyplot(fig)
 
     st.markdown("---")
--
+
     st.subheader("Model Comparison")
 
     prob_lr = logreg.predict_proba(vec)[0][1]
