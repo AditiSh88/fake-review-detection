@@ -10,3 +10,5 @@ shap
 transformers
 torch
 wordcloud
+streamlit
+reportlab
