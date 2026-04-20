@@ -1,47 +1,77 @@
 import streamlit as st
-st.markdown("## Advanced Analysis")
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+
+from preprocessing import clean_text
+from utils.model_loader import load_models
+
+tfidf, logreg, xgb = load_models()
+
+st.title("Advanced Analysis")
+
+# ---------------- INPUT ----------------
+st.markdown("## Write Review")
+
+text_input = st.text_area("Enter review here")
 
 model = st.selectbox("Select Model", ["Hybrid", "Logistic Regression", "XGBoost"])
 
-prob_lr, prob_xgb = 0.7, 0.6
-prob_hybrid = (prob_lr + prob_xgb) / 2
+if st.button("Analyze"):
 
-def verdict(p):
-    return "Fake" if p > 0.5 else "Genuine"
+    vec = tfidf.transform([clean_text(text_input)])
 
-# hybrid
-if model == "Hybrid":
+    prob_lr = logreg.predict_proba(vec)[0][1]
+    prob_xgb = xgb.predict_proba(vec)[0][1]
+    prob_hybrid = (prob_lr + prob_xgb) / 2
 
-    st.markdown("### Final Hybrid Result")
+    def verdict(p):
+        return "Fake" if p > 0.5 else "Genuine"
 
-    st.markdown(f"""
-    <div style='background:#dbeafe;padding:10px;border-radius:8px'>
-    Verdict: {verdict(prob_hybrid)}<br>
-    Prediction: {prob_hybrid:.3f}
-    </div>
-    """, unsafe_allow_html=True)
+    # ---------------- HYBRID ----------------
+    if model == "Hybrid":
 
-    col1, col2 = st.columns(2)
+        st.markdown("### Final Verdict")
+        st.write(f"{verdict(prob_hybrid)} Review")
 
-    col1.markdown(f"<div style='background:#fee2e2;padding:10px;border-radius:8px'>LogReg: {prob_lr:.3f}</div>", unsafe_allow_html=True)
-    col2.markdown(f"<div style='background:#e0e7ff;padding:10px;border-radius:8px'>XGBoost: {prob_xgb:.3f}</div>", unsafe_allow_html=True)
+        st.markdown(f"Prediction: {prob_hybrid:.3f}")
 
-# model specific
-elif model == "Logistic Regression":
-    st.markdown("### Logistic Regression Analysis Only")
-    st.write("Prediction:", prob_lr)
-    st.write("Verdict:", verdict(prob_lr))
+        st.markdown("---")  # spacing requirement
 
-elif model == "XGBoost":
-    st.markdown("### XGBoost Analysis Only")
-    st.write("Prediction:", prob_xgb)
-    st.write("Verdict:", verdict(prob_xgb))
+        st.markdown("### Model Results")
 
-# shap
-st.markdown("### SHAP Explainability")
-st.caption("Feature contribution visualization for selected model")
+        col1, col2 = st.columns(2)
+        col1.write(f"LogReg: {prob_lr:.3f}")
+        col2.write(f"XGBoost: {prob_xgb:.3f}")
 
-# (your SHAP code stays here)
+    # ---------------- LOGREG ----------------
+    elif model == "Logistic Regression":
 
-# word cloud
-st.markdown("### Word Cloud")
+        st.markdown("### Final Verdict")
+        st.markdown(f"{verdict(prob_lr)} Review")
+
+        st.markdown(f"""
+        <div style='background:#fee2e2;padding:10px;border-radius:8px'>
+        Prediction: {prob_lr:.3f}
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.caption("Logistic Regression uses linear word relationships to classify reviews.")
+
+    # ---------------- XGBOOST ----------------
+    elif model == "XGBoost":
+
+        st.markdown("### Final Verdict")
+        st.markdown(f"{verdict(prob_xgb)} Review")
+
+        st.markdown(f"""
+        <div style='background:#e0e7ff;padding:10px;border-radius:8px'>
+        Prediction: {prob_xgb:.3f}
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.caption("XGBoost uses decision trees to capture complex patterns in text.")
+
+    # ---------------- EXPLAINABILITY ----------------
+    st.markdown("### Explainability")
+
+    st.caption("Words influencing model decision (red=fake, green=genuine)")
