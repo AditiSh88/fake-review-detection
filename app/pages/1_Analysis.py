@@ -102,7 +102,7 @@ if st.button("Analyze"):
         ax.bar(["LogReg", "XGBoost"], [prob_lr, prob_xgb])
         ax.set_ylabel("Probability")
         
-        st.pyplot(fig, use_container_width=False)
+        st.pyplot(fig)
 
     # LOGISTIC REGRESSION 
     elif model == "Logistic Regression":
