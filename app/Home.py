@@ -10,6 +10,50 @@ tfidf, logreg, xgb = load_models()
 
 st.set_page_config(page_title="Review Detector", layout="wide")
 
+st.markdown("""
+<style>
+
+/* ===== SIDEBAR BACKGROUND ===== */
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #1e3a8a, #4f46e5);
+    padding-top: 20px;
+}
+
+/* ===== SIDEBAR TEXT ===== */
+[data-testid="stSidebar"] * {
+    color: white !important;
+}
+
+/* ===== NAVIGATION LINKS ===== */
+[data-testid="stSidebarNav"] a {
+    background: rgba(255,255,255,0.08);
+    margin: 6px 10px;
+    padding: 10px;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+}
+
+/* HOVER EFFECT */
+[data-testid="stSidebarNav"] a:hover {
+    background: rgba(255,255,255,0.25);
+    transform: translateX(4px);
+}
+
+/* ACTIVE PAGE */
+[data-testid="stSidebarNav"] a[aria-current="page"] {
+    background: white;
+    color: black !important;
+    font-weight: 600;
+}
+
+/* REMOVE DEFAULT GREY */
+section[data-testid="stSidebar"] > div {
+    background: transparent;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
 # ---------------- TITLE ----------------
 st.title("Review Detector")
 
