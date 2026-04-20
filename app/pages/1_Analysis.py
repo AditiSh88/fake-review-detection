@@ -99,10 +99,11 @@ if st.button("Analyze"):
         st.markdown("### Model Comparison")
         st.caption("Comparison of probability outputs from Logistic Regression and XGBoost models.")
 
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(4, 2.5))  # smaller size
         ax.bar(["LogReg", "XGBoost"], [prob_lr, prob_xgb])
         ax.set_ylabel("Probability")
-        st.pyplot(fig)
+        
+        st.pyplot(fig, use_container_width=False)
 
     # ---------------- LOGISTIC REGRESSION ----------------
     elif model == "Logistic Regression":
