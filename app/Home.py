@@ -10,63 +10,53 @@ tfidf, logreg, xgb = load_models()
 
 st.set_page_config(page_title="Review Detector", layout="wide")
 
-theme = st.toggle("Dark Mode", value=True)
-
-bg = "#0f172a" if theme else "#f8fafc"
-text = "#e2e8f0" if theme else "#111827"
-
-st.markdown(f"""
+# ---------------- SIDEBAR (COLORED + BOX MENU) ----------------
+st.markdown("""
 <style>
-body {{
-    background-color: {bg};
-    color: {text};
-}}
+section[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #3b82f6, #6366f1);
+}
 
-.hero {{
-    padding: 24px;
-    border-radius: 14px;
-    background: linear-gradient(135deg,#3b82f6,#6366f1,#a855f7);
-    color: white;
-}}
-
-.box {{
-    padding: 12px;
+.sidebar-item {
+    background: white;
+    padding: 10px;
     border-radius: 10px;
-    background: #f1f5f9;
+    margin: 8px 0;
+    text-align: center;
+    font-weight: 500;
     color: #111;
-}}
-
-.small {{
-    font-size: 12px;
-    opacity: 0.7;
-}}
+}
 </style>
 """, unsafe_allow_html=True)
 
-# title
-st.markdown("""
-<div class="hero">
-<h2>Review Detector</h2>
-<p>Hybrid machine learning system for detecting fake and manipulated reviews with explainable AI insights.</p>
-</div>
-""", unsafe_allow_html=True)
+with st.sidebar:
+    st.markdown("## Navigation")
+    st.markdown("<div class='sidebar-item'>Home</div>", unsafe_allow_html=True)
+    st.markdown("<div class='sidebar-item'>Analysis</div>", unsafe_allow_html=True)
+    st.markdown("<div class='sidebar-item'>Insights</div>", unsafe_allow_html=True)
 
-# input
-st.markdown("### Enter Review")
+# ---------------- TITLE ----------------
+st.title("Review Detector")
+
+st.write("A hybrid machine learning system for detecting fake and manipulated reviews using explainable AI.")
+
+# ---------------- INPUT ----------------
+st.markdown("## Enter Review")
+
 text_input = st.text_area("", height=140)
 
 uploaded_file = st.file_uploader("Upload review (.txt)", type=["txt"])
 if uploaded_file:
     text_input = uploaded_file.read().decode("utf-8")
 
-# analyze
+# ---------------- ANALYZE ----------------
 if st.button("Analyze Review"):
 
     if text_input.strip() == "":
-        st.warning("Enter review")
+        st.warning("Please enter a review")
     else:
 
-        with st.spinner("Analyzing review patterns..."):
+        with st.spinner("Analyzing..."):
             time.sleep(1)
 
         cleaned = clean_text(text_input)
@@ -80,75 +70,97 @@ if st.button("Analyze Review"):
         trust = (1 - prob) * 100 if pred else prob * 100
         agreement = abs(prob_lr - prob_xgb)
 
-        # final verdict
+        # ---------------- FINAL VERDICT ----------------
         st.markdown("## Final Verdict")
 
-        st.markdown("""
-        <div style='background:#dbeafe;padding:10px;border-radius:8px;color:#1e3a8a'>
-        This prediction is generated using a hybrid ML model combining Logistic Regression and XGBoost.
+        if pred:
+            st.markdown("### Likely Fake Review")
+        else:
+            st.markdown("### Likely Genuine Review")
+
+        st.write("This result is generated using a hybrid machine learning system combining Logistic Regression and XGBoost.")
+
+        st.caption("Disclaimer: This prediction is for analytical assistance only and should not be considered absolute verification.")
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # ---------------- METRICS ----------------
+        col1, col2 = st.columns(2)
+
+        col1.markdown(f"""
+        <div style='background:#dbeafe;padding:14px;border-radius:10px'>
+        <b>Prediction Score</b><br>{prob:.3f}
+        </div>
+        """, unsafe_allow_html=True)
+
+        col2.markdown(f"""
+        <div style='background:#ede9fe;padding:14px;border-radius:10px'>
+        <b>Confidence Score</b><br>{trust:.2f}%
         </div>
         """, unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        if pred:
-            st.markdown("<div style='background:#fee2e2;padding:12px;border-radius:10px;color:#991b1b;font-size:18px'>Likely Fake Review</div>", unsafe_allow_html=True)
-        else:
-            st.markdown("<div style='background:#dcfce7;padding:12px;border-radius:10px;color:#166534;font-size:18px'>Likely Genuine Review</div>", unsafe_allow_html=True)
-
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        # metrics
-        st.markdown("### Prediction Metrics")
-
-        col1, col2 = st.columns(2)
-
-        col1.markdown(f"<div class='box'><b>Prediction</b><br>{prob:.3f}</div>", unsafe_allow_html=True)
-        col2.markdown(f"<div class='box'><b>Confidence</b><br>{trust:.2f}%</div>", unsafe_allow_html=True)
-
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        # explainability
+        # ---------------- EXPLAINABILITY ----------------
         st.markdown("### Explainability")
 
-        st.caption("Highlighted words indicate influence on prediction (red=fake signals, green=genuine signals)")
+        st.caption("""
+        This section highlights words that influenced the model’s decision.
+        Red indicates patterns associated with fake reviews, while green indicates patterns associated with genuine reviews.
+        Each word contributes based on learned patterns from training data.
+        """)
 
         feature_names = tfidf.get_feature_names_out()
         coefs = logreg.coef_[0]
-
         vec_array = vec.toarray()[0]
         indices = vec_array.nonzero()[0]
 
         weights = {feature_names[i]: coefs[i] for i in indices}
 
         def highlight(w):
-            if w.lower() in weights:
-                color = "rgba(255,0,0,0.25)" if weights[w.lower()] > 0 else "rgba(0,255,0,0.25)"
+            key = w.lower()
+            if key in weights:
+                color = "rgba(255,0,0,0.25)" if weights[key] > 0 else "rgba(0,255,0,0.25)"
                 return f"<span style='background:{color};padding:3px;border-radius:4px'>{w}</span>"
             return w
 
         highlighted = " ".join([highlight(w) for w in text_input.split()])
-
-        st.markdown(f"<div class='box'>{highlighted}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='background:#f8fafc;padding:10px;border-radius:10px'>{highlighted}</div>", unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # model insights
+        # ---------------- MODEL INSIGHTS ----------------
         st.markdown("### Model Insights")
 
-        st.caption("Logistic Regression = linear patterns, XGBoost = complex nonlinear patterns")
+        st.caption("""
+        Logistic Regression identifies linear relationships between words and labels.
+        XGBoost captures complex non-linear patterns and feature interactions.
+        Both models are combined in a hybrid system for better stability and accuracy.
+        """)
 
         col1, col2 = st.columns(2)
 
-        col1.markdown(f"<div class='box'><b>LogReg</b><br>{prob_lr:.3f}</div>", unsafe_allow_html=True)
-        col2.markdown(f"<div class='box'><b>XGBoost</b><br>{prob_xgb:.3f}</div>", unsafe_allow_html=True)
+        col1.markdown(f"""
+        <div style='background:#fee2e2;padding:12px;border-radius:10px'>
+        <b>Logistic Regression</b><br>{prob_lr:.3f}
+        </div>
+        """, unsafe_allow_html=True)
+
+        col2.markdown(f"""
+        <div style='background:#e0e7ff;padding:12px;border-radius:10px'>
+        <b>XGBoost</b><br>{prob_xgb:.3f}
+        </div>
+        """, unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # model agreement
+        # ---------------- MODEL AGREEMENT ----------------
         st.markdown("### Model Agreement")
 
-        st.caption("Measures consistency between both models")
+        st.caption("""
+        Model agreement measures how consistently Logistic Regression and XGBoost produce similar predictions.
+        High agreement indicates strong confidence, while low agreement indicates conflicting interpretations.
+        """)
 
         if agreement < 0.1:
             st.success("High Agreement")
