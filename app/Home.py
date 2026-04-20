@@ -1,7 +1,7 @@
 import streamlit as st
-import os, sys
+import os, sys, time
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 
 from preprocessing import clean_text
 from utils.model_loader import load_models
@@ -26,25 +26,36 @@ body {{
 }}
 
 .block-container {{
-    max-width: 950px;
-    padding-top: 2rem;
+    max-width: 820px;
+    padding-top: 1.5rem;
+}}
+
+/* Chat bubbles */
+.user {{
+    background: #1e293b;
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+}}
+
+.bot {{
+    background: #f1f5f9;
+    color: #111;
+    padding: 14px;
+    border-radius: 12px;
+    margin-bottom: 12px;
 }}
 
 .hero {{
-    padding: 26px;
-    border-radius: 16px;
+    padding: 20px;
+    border-radius: 14px;
     background: linear-gradient(135deg, #3b82f6, #6366f1, #a855f7);
     color: white;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
 }}
 
 textarea {{
     border-radius: 10px !important;
-}}
-
-.small-upload {{
-    font-size: 12px;
-    opacity: 0.7;
 }}
 </style>
 """, unsafe_allow_html=True)
@@ -52,29 +63,32 @@ textarea {{
 # hero
 st.markdown("""
 <div class="hero">
-<h2>Review Detector</h2>
-<p>Hybrid machine learning system for detecting fake and manipulated reviews with explainable outputs.</p>
+<h3>Review Detector</h3>
+<p>AI system that evaluates authenticity of reviews using hybrid machine learning and explainability.</p>
 </div>
 """, unsafe_allow_html=True)
 
 # input
-st.markdown("### Enter Review")
-
-text_input = st.text_area("", height=150, placeholder="Paste review here...")
+user_input = st.text_area("", height=120, placeholder="Paste a review...")
 
 uploaded_file = st.file_uploader("", type=["txt"])
 if uploaded_file:
-    text_input = uploaded_file.read().decode("utf-8")
+    user_input = uploaded_file.read().decode("utf-8")
 
-st.caption("Upload a .txt file (optional)")
-
-# analysis
 if st.button("Analyze"):
 
-    if text_input.strip() == "":
-        st.warning("Please enter a review")
+    if user_input.strip() == "":
+        st.warning("Enter a review")
     else:
-        cleaned = clean_text(text_input)
+
+        # USER MESSAGE
+        st.markdown(f"<div class='user'>{user_input}</div>", unsafe_allow_html=True)
+
+        # AI THINKING
+        with st.spinner("Analyzing linguistic patterns, model signals, and consistency..."):
+            time.sleep(1.2)
+
+        cleaned = clean_text(user_input)
         vec = tfidf.transform([cleaned])
 
         prob_lr = logreg.predict_proba(vec)[0][1]
@@ -86,28 +100,33 @@ if st.button("Analyze"):
         trust = (1 - prob) * 100 if pred else prob * 100
         agreement = abs(prob_lr - prob_xgb)
 
+        response = ""
+
         # RESULT
-        st.markdown("## Result")
-
         if pred:
-            st.error("Likely Fake Review")
+            response += "<b>Verdict:</b> Likely Fake Review<br>"
         else:
-            st.success("Likely Genuine Review")
+            response += "<b>Verdict:</b> Likely Genuine Review<br>"
 
-        st.progress(trust/100)
-        st.write(f"Trust Score: {trust:.2f}%")
+        response += f"<b>Confidence:</b> {trust:.2f}%<br><br>"
 
-        st.divider()
+        # CONFIDENCE EXPLANATION
+        if trust > 75:
+            response += "The system is highly confident based on strong language patterns.<br><br>"
+        elif trust > 50:
+            response += "The prediction has moderate confidence with mixed signals.<br><br>"
+        else:
+            response += "The prediction is uncertain due to ambiguous patterns.<br><br>"
+
+        # AGREEMENT
+        if agreement < 0.1:
+            response += "<b>Model Agreement:</b> High consistency between models.<br><br>"
+        elif agreement < 0.25:
+            response += "<b>Model Agreement:</b> Moderate consistency.<br><br>"
+        else:
+            response += "<b>Model Agreement:</b> Low consistency, review is complex.<br><br>"
 
         # EXPLAINABILITY
-        st.markdown("### Why this prediction?")
-        st.caption("""
-The highlighted words below contributed most to the model’s decision. 
-Words in red indicate signals commonly associated with fake or promotional content, 
-while green words indicate patterns seen in genuine reviews.
-This helps in understanding not just the result, but the reasoning behind it.
-""")
-
         feature_names = tfidf.get_feature_names_out()
         coefs = logreg.coef_[0]
 
@@ -120,49 +139,18 @@ This helps in understanding not just the result, but the reasoning behind it.
             if w.lower() in weights:
                 score = weights[w.lower()]
                 color = "rgba(255,0,0,0.3)" if score > 0 else "rgba(0,255,0,0.3)"
-                return f"<span style='background:{color};padding:4px;border-radius:5px'>{w}</span>"
+                return f"<span style='background:{color};padding:3px;border-radius:4px'>{w}</span>"
             return w
 
-        highlighted = " ".join([highlight(w) for w in text_input.split()])
+        highlighted = " ".join([highlight(w) for w in user_input.split()])
 
-        st.markdown(f"""
-        <div style="background:#f1f5f9;padding:15px;border-radius:10px;color:#111;">
-        {highlighted}
-        </div>
-        """, unsafe_allow_html=True)
+        response += "<b>Key Signals:</b><br>"
+        response += f"<div style='background:#f1f5f9;padding:10px;border-radius:8px;color:#111'>{highlighted}</div><br>"
 
-        st.divider()
-
-        # RISK SIGNALS
-        st.markdown("### Risk Signals")
-        st.caption("""
-Risk signals highlight linguistic or structural patterns that are often found in fake or manipulated reviews. 
-These include overly promotional language, unnatural emphasis, or lack of detail. 
-They are not definitive proof but provide supporting evidence for the prediction.
-""")
-
-        if len(text_input.split()) < 5:
-            st.warning("Very short review")
-
-        if "buy" in text_input.lower():
-            st.warning("Promotional language detected")
-
-        if text_input.count("!") > 2:
-            st.warning("Excessive punctuation")
-
-        st.divider()
-
-        # AGREEMENT
-        st.markdown("### Model Agreement")
-        st.caption("""
-This measures how closely both machine learning models agree on the prediction. 
-High agreement indicates strong confidence, while low agreement suggests uncertainty 
-and that the review may be more complex or ambiguous.
-""")
-
-        if agreement < 0.1:
-            st.success("High agreement")
-        elif agreement < 0.25:
-            st.warning("Moderate agreement")
+        # FINAL INTERPRETATION
+        if pred:
+            response += "This review likely contains promotional or manipulated content."
         else:
-            st.error("Low agreement")
+            response += "This review appears to reflect a genuine user experience."
+
+        st.markdown(f"<div class='bot'>{response}</div>", unsafe_allow_html=True)
