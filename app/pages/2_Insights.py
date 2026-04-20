@@ -50,7 +50,7 @@ for i in range(2):
     for j in range(2):
         ax1.text(j, i, cm[i, j], ha="center", va="center")
 
-st.pyplot(fig1, use_container_width=False)
+st.pyplot(fig1)
 
 st.write("The confusion matrix shows correct and incorrect predictions.")
 
@@ -65,6 +65,6 @@ fig2, ax2 = plt.subplots(figsize=(4, 3))  # reduced size
 ax2.plot(fpr, tpr)
 ax2.plot([0, 1], [0, 1], linestyle="--")
 
-st.pyplot(fig2, use_container_width=False)
+st.pyplot(fig2)
 
 st.write("ROC curve shows model performance across thresholds.")
