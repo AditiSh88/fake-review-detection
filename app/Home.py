@@ -13,40 +13,40 @@ st.set_page_config(page_title="Review Detector", layout="wide")
 st.markdown("""
 <style>
 
-/* ===== SIDEBAR BACKGROUND ===== */
+/*sidebar background */
 [data-testid="stSidebar"] {
     background: linear-gradient(180deg, #1e3a8a, #4f46e5);
     padding-top: 20px;
 }
 
-/* ===== SIDEBAR TEXT ===== */
+/* sidebar text */
 [data-testid="stSidebar"] * {
     color: white !important;
 }
 
-/* ===== NAVIGATION LINKS ===== */
+/* navigation links */
 [data-testid="stSidebarNav"] a {
-    background: rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.12);
     margin: 6px 10px;
     padding: 10px;
     border-radius: 10px;
     transition: all 0.2s ease;
 }
 
-/* HOVER EFFECT */
+/* hover */
 [data-testid="stSidebarNav"] a:hover {
     background: rgba(255,255,255,0.25);
     transform: translateX(4px);
 }
 
-/* ACTIVE PAGE */
+/* active page */
 [data-testid="stSidebarNav"] a[aria-current="page"] {
-    background: white;
-    color: black !important;
+    background: rgba(255,255,255,0.25);
+    color: white !important;
     font-weight: 600;
 }
 
-/* REMOVE DEFAULT GREY */
+/* remove default grey */
 section[data-testid="stSidebar"] > div {
     background: transparent;
 }
@@ -54,12 +54,12 @@ section[data-testid="stSidebar"] > div {
 </style>
 """, unsafe_allow_html=True)
 
-# ---------------- TITLE ----------------
+# title
 st.title("Review Detector")
 
 st.write("A hybrid machine learning system for detecting fake and manipulated reviews using explainable AI.")
 
-# ---------------- INPUT ----------------
+# input
 st.markdown("## Enter Review")
 
 text_input = st.text_area("", height=140)
@@ -68,7 +68,7 @@ uploaded_file = st.file_uploader("Upload review (.txt)", type=["txt"])
 if uploaded_file:
     text_input = uploaded_file.read().decode("utf-8")
 
-# ---------------- ANALYZE ----------------
+# analyze
 if st.button("Analyze Review"):
 
     if text_input.strip() == "":
@@ -89,7 +89,7 @@ if st.button("Analyze Review"):
         trust = (1 - prob) * 100 if pred else prob * 100
         agreement = abs(prob_lr - prob_xgb)
 
-        # ---------------- FINAL VERDICT ----------------
+        # final verdict
         st.markdown("## Final Verdict")
 
         st.write("This result is generated using a hybrid machine learning system combining Logistic Regression and XGBoost.")
@@ -99,7 +99,7 @@ if st.button("Analyze Review"):
         else:
             st.markdown("<div style='background:#dcfce7;padding:12px;border-radius:10px;color:#166534;font-size:18px'>Likely Genuine Review</div>", unsafe_allow_html=True)
 
-        # ---------------- METRICS ----------------
+        # metrics
         col1, col2 = st.columns(2)
 
         col1.markdown(f"""
@@ -114,7 +114,7 @@ if st.button("Analyze Review"):
         </div>
         """, unsafe_allow_html=True)
 
-        # ---------------- EXPLAINABILITY ----------------
+        # explainability
         st.markdown("### Explainability")
 
         st.caption("""
@@ -139,7 +139,7 @@ if st.button("Analyze Review"):
         highlighted = " ".join([highlight(w) for w in text_input.split()])
         st.markdown(f"<div style='background:#f8fafc;padding:10px;border-radius:10px'>{highlighted}</div>", unsafe_allow_html=True)
 
-        # ---------------- MODEL INSIGHTS ----------------
+        # model insights
         st.markdown("### Model Insights")
 
         st.caption("""
@@ -152,7 +152,7 @@ if st.button("Analyze Review"):
         col1.markdown(f"<div style='background:#fee2e2;padding:12px;border-radius:10px'><b>LogReg</b><br>{prob_lr:.3f}</div>", unsafe_allow_html=True)
         col2.markdown(f"<div style='background:#e0e7ff;padding:12px;border-radius:10px'><b>XGBoost</b><br>{prob_xgb:.3f}</div>", unsafe_allow_html=True)
 
-        # ---------------- MODEL AGREEMENT ----------------
+        # model agreement
         st.markdown("### Model Agreement")
 
         st.caption("""
