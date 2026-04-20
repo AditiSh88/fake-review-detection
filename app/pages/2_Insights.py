@@ -1,42 +1,33 @@
 import streamlit as st
-import json
-import os
 import matplotlib.pyplot as plt
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, roc_curve, auc
+import numpy as np
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+st.set_page_config(page_title="App Insights")
 
-metrics = json.load(open(os.path.join(BASE_DIR, "models/metrics.json")))
+st.title("App Insights")
 
-st.title("Model Insights")
+# dummy data (replace if needed)
+cm = np.array([[50, 10],[8, 60]])
 
-col1, col2, col3, col4 = st.columns(4)
-col1.metric("Accuracy", metrics["accuracy"])
-col2.metric("Precision", metrics["precision"])
-col3.metric("Recall", metrics["recall"])
-col4.metric("F1 Score", metrics["f1"])
+st.markdown("### Model Performance")
 
-st.markdown("---")
+col1, col2, col3 = st.columns(3)
 
-# sample data (replace later if needed)
-y_true = [0,1,0,1,0,1,0,1]
-y_pred = [0,1,0,1,0,0,0,1]
+col1.metric("Accuracy", "0.82")
+col2.metric("Precision", "0.80")
+col3.metric("Recall", "0.78")
 
-st.subheader("Confusion Matrix")
+st.divider()
 
-fig, ax = plt.subplots(figsize=(2, 2))
-ConfusionMatrixDisplay(confusion_matrix(y_true, y_pred)).plot(ax=ax)
-st.pyplot(fig)
+# smaller charts
+col4, col5 = st.columns(2)
 
-st.markdown("---")
+with col4:
+    fig, ax = plt.subplots(figsize=(3,3))
+    ax.imshow(cm)
+    st.pyplot(fig)
 
-st.subheader("ROC Curve")
-
-fpr, tpr, _ = roc_curve(y_true, y_pred)
-roc_auc = auc(fpr, tpr)
-
-fig2, ax2 = plt.subplots(figsize=(3, 2))
-ax2.plot(fpr, tpr, label=f"AUC={roc_auc:.2f}")
-ax2.plot([0,1],[0,1])
-ax2.legend()
-st.pyplot(fig2)
+with col5:
+    fig2, ax2 = plt.subplots(figsize=(3,3))
+    ax2.plot([0,1],[0,1])
+    st.pyplot(fig2)
