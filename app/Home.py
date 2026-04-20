@@ -10,31 +10,6 @@ tfidf, logreg, xgb = load_models()
 
 st.set_page_config(page_title="Review Detector", layout="wide")
 
-# ---------------- SIDEBAR (COLORED + BOX MENU) ----------------
-st.markdown("""
-<style>
-section[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #3b82f6, #6366f1);
-}
-
-.sidebar-item {
-    background: white;
-    padding: 10px;
-    border-radius: 10px;
-    margin: 8px 0;
-    text-align: center;
-    font-weight: 500;
-    color: #111;
-}
-</style>
-""", unsafe_allow_html=True)
-
-with st.sidebar:
-    st.markdown("## Navigation")
-    st.markdown("<div class='sidebar-item'>Home</div>", unsafe_allow_html=True)
-    st.markdown("<div class='sidebar-item'>Analysis</div>", unsafe_allow_html=True)
-    st.markdown("<div class='sidebar-item'>Insights</div>", unsafe_allow_html=True)
-
 # ---------------- TITLE ----------------
 st.title("Review Detector")
 
@@ -73,16 +48,12 @@ if st.button("Analyze Review"):
         # ---------------- FINAL VERDICT ----------------
         st.markdown("## Final Verdict")
 
-        if pred:
-            st.markdown("### Likely Fake Review")
-        else:
-            st.markdown("### Likely Genuine Review")
-
         st.write("This result is generated using a hybrid machine learning system combining Logistic Regression and XGBoost.")
 
-        st.caption("Disclaimer: This prediction is for analytical assistance only and should not be considered absolute verification.")
-
-        st.markdown("<br>", unsafe_allow_html=True)
+        if pred:
+            st.markdown("<div style='background:#fee2e2;padding:12px;border-radius:10px;color:#991b1b;font-size:18px'>Likely Fake Review</div>", unsafe_allow_html=True)
+        else:
+            st.markdown("<div style='background:#dcfce7;padding:12px;border-radius:10px;color:#166534;font-size:18px'>Likely Genuine Review</div>", unsafe_allow_html=True)
 
         # ---------------- METRICS ----------------
         col1, col2 = st.columns(2)
@@ -99,19 +70,16 @@ if st.button("Analyze Review"):
         </div>
         """, unsafe_allow_html=True)
 
-        st.markdown("<br>", unsafe_allow_html=True)
-
         # ---------------- EXPLAINABILITY ----------------
         st.markdown("### Explainability")
 
         st.caption("""
-        This section highlights words that influenced the model’s decision.
-        Red indicates patterns associated with fake reviews, while green indicates patterns associated with genuine reviews.
-        Each word contributes based on learned patterns from training data.
+        Words highlighted here influence the model’s prediction. Red indicates fake-related signals, green indicates genuine patterns.
         """)
 
         feature_names = tfidf.get_feature_names_out()
         coefs = logreg.coef_[0]
+
         vec_array = vec.toarray()[0]
         indices = vec_array.nonzero()[0]
 
@@ -127,39 +95,25 @@ if st.button("Analyze Review"):
         highlighted = " ".join([highlight(w) for w in text_input.split()])
         st.markdown(f"<div style='background:#f8fafc;padding:10px;border-radius:10px'>{highlighted}</div>", unsafe_allow_html=True)
 
-        st.markdown("<br>", unsafe_allow_html=True)
-
         # ---------------- MODEL INSIGHTS ----------------
         st.markdown("### Model Insights")
 
         st.caption("""
-        Logistic Regression identifies linear relationships between words and labels.
-        XGBoost captures complex non-linear patterns and feature interactions.
-        Both models are combined in a hybrid system for better stability and accuracy.
+        Logistic Regression works by finding simple relationships between words and labels.
+        XGBoost uses advanced decision trees to capture complex patterns in text data.
         """)
 
         col1, col2 = st.columns(2)
 
-        col1.markdown(f"""
-        <div style='background:#fee2e2;padding:12px;border-radius:10px'>
-        <b>Logistic Regression</b><br>{prob_lr:.3f}
-        </div>
-        """, unsafe_allow_html=True)
-
-        col2.markdown(f"""
-        <div style='background:#e0e7ff;padding:12px;border-radius:10px'>
-        <b>XGBoost</b><br>{prob_xgb:.3f}
-        </div>
-        """, unsafe_allow_html=True)
-
-        st.markdown("<br>", unsafe_allow_html=True)
+        col1.markdown(f"<div style='background:#fee2e2;padding:12px;border-radius:10px'><b>LogReg</b><br>{prob_lr:.3f}</div>", unsafe_allow_html=True)
+        col2.markdown(f"<div style='background:#e0e7ff;padding:12px;border-radius:10px'><b>XGBoost</b><br>{prob_xgb:.3f}</div>", unsafe_allow_html=True)
 
         # ---------------- MODEL AGREEMENT ----------------
         st.markdown("### Model Agreement")
 
         st.caption("""
-        Model agreement measures how consistently Logistic Regression and XGBoost produce similar predictions.
-        High agreement indicates strong confidence, while low agreement indicates conflicting interpretations.
+        Agreement shows how similarly both Logistic Regression and XGBoost interpret the review.
+        Higher agreement means more reliable prediction.
         """)
 
         if agreement < 0.1:
