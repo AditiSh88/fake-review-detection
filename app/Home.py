@@ -1,28 +1,5 @@
 import streamlit as st
-import os, sys
-
-st.set_page_config(page_title="Review Detector", layout="wide")
-
-# ✅ GLOBAL SIDEBAR STYLE (applies everywhere)
-st.markdown("""
-<style>
-[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #1e3a8a, #4f46e5);
-}
-[data-testid="stSidebar"] * {
-    color: white !important;
-}
-[data-testid="stSidebarNav"] a {
-    background: rgba(255,255,255,0.12);
-    margin: 6px 10px;
-    padding: 10px;
-    border-radius: 10px;
-}
-[data-testid="stSidebarNav"] a[aria-current="page"] {
-    background: rgba(255,255,255,0.25);
-}
-</style>
-""", unsafe_allow_html=True)
+import os, sys, time
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 
@@ -31,32 +8,161 @@ from utils.model_loader import load_models
 
 tfidf, logreg, xgb = load_models()
 
-# ✅ CAPITALIZED TITLE
-st.title("REVIEW DETECTOR")
+st.set_page_config(page_title="REVIEW DETECTOR", layout="wide")
 
-text_input = st.text_area("Enter Review")
+st.markdown("""
+<style>
 
+/* SIDEBAR BCKGROUND */
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #1e3a8a, #4f46e5);
+    padding-top: 20px;
+}
+
+/* SIDEBAR TEXT */
+[data-testid="stSidebar"] * {
+    color: white !important;
+}
+
+/* NAVIGATION LINKS */
+[data-testid="stSidebarNav"] a {
+    background: rgba(255,255,255,0.12);
+    margin: 6px 10px;
+    padding: 10px;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+}
+
+/* HOVER */
+[data-testid="stSidebarNav"] a:hover {
+    background: rgba(255,255,255,0.25);
+    transform: translateX(4px);
+}
+
+/* ACTIVE PAGE */
+[data-testid="stSidebarNav"] a[aria-current="page"] {
+    background: rgba(255,255,255,0.25);
+    color: white !important;
+    font-weight: 600;
+}
+
+/* REMOVE DEFAULT GREY */
+section[data-testid="stSidebar"] > div {
+    background: transparent;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+# TITLE
+st.title("Review Detector")
+
+st.write("A hybrid machine learning system for detecting fake and manipulated reviews using explainable AI.")
+
+# INPUT
+st.markdown("## Enter Review")
+
+text_input = st.text_area("", height=140)
+
+uploaded_file = st.file_uploader("Upload review (.txt)", type=["txt"])
+if uploaded_file:
+    text_input = uploaded_file.read().decode("utf-8")
+
+# ANALYZE
 if st.button("Analyze Review"):
 
-    vec = tfidf.transform([clean_text(text_input)])
-
-    prob_lr = logreg.predict_proba(vec)[0][1]
-    prob_xgb = xgb.predict_proba(vec)[0][1]
-    prob = (prob_lr + prob_xgb) / 2
-
-    st.markdown("## Final Verdict")
-
-    # ✅ RESULT FIRST
-    if prob > 0.5:
-        st.markdown("<div style='background:#fee2e2;padding:12px;border-radius:10px;color:#991b1b'>Likely Fake Review</div>", unsafe_allow_html=True)
+    if text_input.strip() == "":
+        st.warning("Please enter a review")
     else:
-        st.markdown("<div style='background:#dcfce7;padding:12px;border-radius:10px;color:#166534'>Likely Genuine Review</div>", unsafe_allow_html=True)
 
-    # ✅ THEN DESCRIPTION
-    st.write("This result is generated using a hybrid machine learning system combining Logistic Regression and XGBoost.")
+        with st.spinner("Analyzing..."):
+            time.sleep(1)
 
-    # ✅ THEN METRICS
-    col1, col2 = st.columns(2)
+        cleaned = clean_text(text_input)
+        vec = tfidf.transform([cleaned])
 
-    col1.markdown(f"<div style='background:#dbeafe;padding:10px;border-radius:8px'><b>Prediction</b><br>{prob:.3f}</div>", unsafe_allow_html=True)
-    col2.markdown(f"<div style='background:#ede9fe;padding:10px;border-radius:8px'><b>Confidence</b><br>{(1-abs(0.5-prob)*2)*100:.2f}%</div>", unsafe_allow_html=True)
+        prob_lr = logreg.predict_proba(vec)[0][1]
+        prob_xgb = xgb.predict_proba(vec)[0][1]
+        prob = (prob_lr + prob_xgb) / 2
+
+        pred = 1 if prob > 0.5 else 0
+        trust = (1 - prob) * 100 if pred else prob * 100
+        agreement = abs(prob_lr - prob_xgb)
+
+        # FINAL VERDICT
+        st.markdown("## Final Verdict")
+
+        if pred:
+            st.markdown("<div style='background:#fee2e2;padding:12px;border-radius:10px;color:#991b1b;font-size:18px'>Likely Fake Review</div>", unsafe_allow_html=True)
+        else:
+            st.markdown("<div style='background:#dcfce7;padding:12px;border-radius:10px;color:#166534;font-size:18px'>Likely Genuine Review</div>", unsafe_allow_html=True)
+        
+        st.write("This result is generated using a hybrid machine learning system combining Logistic Regression and XGBoost.")     
+        
+        # METRICS
+        col1, col2 = st.columns(2)
+
+        col1.markdown(f"""
+        <div style='background:#dbeafe;padding:14px;border-radius:10px'>
+        <b>Prediction Score</b><br>{prob:.3f}
+        </div>
+        """, unsafe_allow_html=True)
+
+        col2.markdown(f"""
+        <div style='background:#ede9fe;padding:14px;border-radius:10px'>
+        <b>Confidence Score</b><br>{trust:.2f}%
+        </div>
+        """, unsafe_allow_html=True)
+
+        # EXPLAINABILITY 
+        st.markdown("### Explainability")
+
+        st.caption("""
+        Words highlighted here influence the model’s prediction. Red indicates fake-related signals, green indicates genuine patterns.
+        """)
+
+        feature_names = tfidf.get_feature_names_out()
+        coefs = logreg.coef_[0]
+
+        vec_array = vec.toarray()[0]
+        indices = vec_array.nonzero()[0]
+
+        weights = {feature_names[i]: coefs[i] for i in indices}
+
+        def highlight(w):
+            key = w.lower()
+            if key in weights:
+                color = "rgba(255,0,0,0.25)" if weights[key] > 0 else "rgba(0,255,0,0.25)"
+                return f"<span style='background:{color};padding:3px;border-radius:4px'>{w}</span>"
+            return w
+
+        highlighted = " ".join([highlight(w) for w in text_input.split()])
+        st.markdown(f"<div style='background:#f8fafc;padding:10px;border-radius:10px'>{highlighted}</div>", unsafe_allow_html=True)
+
+        # MODEL INSIGHTS
+        st.markdown("### Model Insights")
+
+        st.caption("""
+        Logistic Regression works by finding simple relationships between words and labels.
+        XGBoost uses advanced decision trees to capture complex patterns in text data.
+        """)
+
+        col1, col2 = st.columns(2)
+
+        col1.markdown(f"<div style='background:#fee2e2;padding:12px;border-radius:10px'><b>LogReg</b><br>{prob_lr:.3f}</div>", unsafe_allow_html=True)
+        col2.markdown(f"<div style='background:#e0e7ff;padding:12px;border-radius:10px'><b>XGBoost</b><br>{prob_xgb:.3f}</div>", unsafe_allow_html=True)
+
+        # MODEL AGREEMENT 
+        st.markdown("### Model Agreement")
+
+        st.caption("""
+        Agreement shows how similarly both Logistic Regression and XGBoost interpret the review.
+        Higher agreement means more reliable prediction.
+        """)
+
+        if agreement < 0.1:
+            st.success("High Agreement")
+        elif agreement < 0.25:
+            st.warning("Moderate Agreement")
+        else:
+            st.error("Low Agreement")
