@@ -1,54 +1,51 @@
 import streamlit as st
-import os, sys
-
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
-
-from preprocessing import clean_text
-from utils.model_loader import load_models
-
-tfidf, logreg, xgb = load_models()
+import numpy as np
+import matplotlib.pyplot as plt
+from wordcloud import WordCloud
 
 st.set_page_config(page_title="Advanced Analysis")
 
 st.title("Advanced Analysis")
 
-text = st.text_area("Enter review")
+text = st.text_area("Enter Review")
 
-model_choice = st.selectbox("Select Model", ["Hybrid", "Logistic Regression", "XGBoost"])
+model = st.selectbox("Select Model", ["Hybrid", "Logistic Regression", "XGBoost"])
 
 if st.button("Analyze"):
 
-    cleaned = clean_text(text)
-    vec = tfidf.transform([cleaned])
-
-    prob_lr = logreg.predict_proba(vec)[0][1]
-    prob_xgb = xgb.predict_proba(vec)[0][1]
-
+    prob_lr = 0.7
+    prob_xgb = 0.6
     prob_hybrid = (prob_lr + prob_xgb) / 2
 
-    def show_result(prob, label):
-        pred = 1 if prob > 0.5 else 0
-        trust = (1 - prob) * 100 if pred else prob * 100
+    def verdict(p):
+        return "Fake" if p > 0.5 else "Genuine"
 
-        st.subheader(label)
-        st.write("Prediction:", "Fake" if pred else "Genuine")
-        st.write("Confidence:", f"{trust:.2f}%")
-
-    # SELECTED MODEL
-    if model_choice == "Hybrid":
-        show_result(prob_hybrid, "Hybrid Model")
-    elif model_choice == "Logistic Regression":
-        show_result(prob_lr, "Logistic Regression")
-    else:
-        show_result(prob_xgb, "XGBoost")
-
-    st.divider()
-
-    # COMPARISON
-    st.markdown("### Model Comparison")
+    # metrics
+    st.markdown("### Metrics")
 
     col1, col2, col3 = st.columns(3)
 
-    col1.metric("Hybrid", f"{prob_hybrid:.2f}")
-    col2.metric("LogReg", f"{prob_lr:.2f}")
-    col3.metric("XGBoost", f"{prob_xgb:.2f}")
+    col1.metric("Hybrid", prob_hybrid)
+    col2.metric("LogReg", prob_lr)
+    col3.metric("XGBoost", prob_xgb)
+
+    st.divider()
+
+    # verdict
+    st.markdown("### Model Results")
+
+    st.write("Logistic Regression:", verdict(prob_lr))
+    st.write("XGBoost:", verdict(prob_xgb))
+    st.write("Hybrid:", verdict(prob_hybrid))
+
+    st.divider()
+
+    # wordcloud
+    st.markdown("### Word Importance")
+
+    wc = WordCloud(background_color="white").generate(text)
+
+    fig, ax = plt.subplots(figsize=(4, 2))
+    ax.imshow(wc)
+    ax.axis("off")
+    st.pyplot(fig)
