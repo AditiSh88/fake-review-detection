@@ -5,7 +5,6 @@ from wordcloud import WordCloud
 
 st.set_page_config(page_title="Advanced Analysis", layout="wide")
 
-# ✅ Sidebar Styling (consistent across pages)
 st.markdown("""
 <style>
 [data-testid="stSidebar"] {
@@ -33,13 +32,13 @@ from utils.model_loader import load_models
 
 tfidf, logreg, xgb = load_models()
 
-# ---------------- UI ----------------
+# UI 
 st.title("Advanced Analysis")
 
 text_input = st.text_area("Enter Review")
 model = st.selectbox("Select Model", ["Hybrid", "Logistic Regression", "XGBoost"])
 
-# ---------------- MAIN ACTION ----------------
+# MAIN ACTION
 if st.button("Analyze"):
 
     vec = tfidf.transform([clean_text(text_input)])
@@ -59,7 +58,7 @@ if st.button("Analyze"):
         col1.markdown(f"<div style='background:#dbeafe;padding:10px;border-radius:8px'><b>Prediction Score</b><br>{prob:.3f}</div>", unsafe_allow_html=True)
         col2.markdown(f"<div style='background:#ede9fe;padding:10px;border-radius:8px'><b>Confidence</b><br>{(1-abs(0.5-prob)*2)*100:.2f}%</div>", unsafe_allow_html=True)
 
-    # ---------------- HYBRID ----------------
+    # HYBRID 
     if model == "Hybrid":
 
         st.markdown("## Final Verdict")
@@ -105,7 +104,7 @@ if st.button("Analyze"):
         
         st.pyplot(fig, use_container_width=False)
 
-    # ---------------- LOGISTIC REGRESSION ----------------
+    # LOGISTIC REGRESSION 
     elif model == "Logistic Regression":
 
         st.markdown("## Final Verdict")
@@ -116,7 +115,7 @@ if st.button("Analyze"):
         st.markdown("### About the Model")
         st.write("Logistic Regression is a linear model that evaluates the probability of a review being fake or genuine based on weighted textual features. It is efficient and interpretable, making it suitable for baseline classification tasks.")
 
-    # ---------------- XGBOOST ----------------
+    # XGBOOST 
     elif model == "XGBoost":
 
         st.markdown("## Final Verdict")
@@ -127,7 +126,7 @@ if st.button("Analyze"):
         st.markdown("### About the Model")
         st.write("XGBoost is an advanced ensemble learning method based on gradient boosting. It builds multiple decision trees sequentially to improve prediction accuracy and capture complex patterns in review data.")
 
-    # ---------------- WORD CLOUD (COMMON FOR ALL) ----------------
+    # WORD CLOUD-
     st.markdown("### Word Cloud")
     st.caption("Visual representation of the most prominent words in the review. Larger words indicate higher frequency or importance in the given text.")
 
