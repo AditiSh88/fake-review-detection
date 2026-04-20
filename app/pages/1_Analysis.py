@@ -1,3 +1,4 @@
+import streamlit as st
 st.markdown("## Advanced Analysis")
 
 model = st.selectbox("Select Model", ["Hybrid", "Logistic Regression", "XGBoost"])
