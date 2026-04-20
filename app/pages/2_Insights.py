@@ -6,7 +6,7 @@ st.set_page_config(page_title="App Insights", layout="wide")
 
 st.title("App Insights")
 
-# ---------------- MODEL PERFORMANCE METRICS ----------------
+# ---------------- MODEL PERFORMANCE ----------------
 st.markdown("## Model Performance")
 
 col1, col2 = st.columns(2)
@@ -32,12 +32,15 @@ col4.markdown(
     unsafe_allow_html=True,
 )
 
-st.caption("""
-Accuracy measures overall correctness of predictions.
-Precision shows how many predicted fake reviews were actually fake.
-Recall measures how many actual fake reviews were correctly detected.
+# ✅ YOUR EXACT DARKER TEXT BLOCK
+st.markdown("""
+<div style='color:#1f2937;font-size:14px'>
+Accuracy measures overall correctness of predictions.<br><br>
+Precision shows how many predicted fake reviews were actually fake.<br><br>
+Recall measures how many actual fake reviews were correctly detected.<br><br>
 F1 Score balances precision and recall for fair evaluation.
-""")
+</div>
+""", unsafe_allow_html=True)
 
 # ---------------- CONFUSION MATRIX ----------------
 st.markdown("## Confusion Matrix")
