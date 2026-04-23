@@ -97,6 +97,16 @@ def main():
     print("\n--- XGBoost ---")
     print(classification_report(y_test, y_pred_xgb))
 
+    # Hybrid Model (Probability Averaging)
+    prob_lr = logreg.predict_proba(X_test_tfidf)[:, 1]
+    prob_xgb = xgb.predict_proba(X_test_tfidf)[:, 1]
+    
+    prob_hybrid = (prob_lr + prob_xgb) / 2
+    y_pred_hybrid = (prob_hybrid > 0.5).astype(int)
+
+    print("\n--- Hybrid Model ---")
+    print(classification_report(y_test, y_pred_hybrid))
+
     # save models
     os.makedirs("models", exist_ok=True)
 
@@ -108,11 +118,25 @@ def main():
 
     # save metrics
     metrics = {
+    "logreg": {
+        "accuracy": float(accuracy_score(y_test, y_pred_lr)),
+        "precision": float(precision_score(y_test, y_pred_lr)),
+        "recall": float(recall_score(y_test, y_pred_lr)),
+        "f1": float(f1_score(y_test, y_pred_lr))
+    },
+    "xgboost": {
         "accuracy": float(accuracy_score(y_test, y_pred_xgb)),
         "precision": float(precision_score(y_test, y_pred_xgb)),
         "recall": float(recall_score(y_test, y_pred_xgb)),
         "f1": float(f1_score(y_test, y_pred_xgb))
+    },
+    "hybrid": {
+        "accuracy": float(accuracy_score(y_test, y_pred_hybrid)),
+        "precision": float(precision_score(y_test, y_pred_hybrid)),
+        "recall": float(recall_score(y_test, y_pred_hybrid)),
+        "f1": float(f1_score(y_test, y_pred_hybrid))
     }
+}
 
     with open("models/metrics.json", "w") as f:
         json.dump(metrics, f)
