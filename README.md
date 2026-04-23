@@ -3,6 +3,10 @@
 ## Project Summary
 > A hybrid machine learning system designed to detect fake and manipulated online reviews, providing interpretable predictions through feature-level explanations and model comparison.
 
+## Live Demo
+Experience the application here:  
+https://fake-review-detection-skogaufc83tmwe28fappqef.streamlit.app/
+
 ## Overview
 Online reviews play a crucial role in influencing user decisions, but the rise of fake and manipulated reviews reduces trust and reliability. This project addresses the problem by building a hybrid machine learning system that classifies reviews as Likely Genuine or Likely Fake, while also explaining why a prediction was made.
 
