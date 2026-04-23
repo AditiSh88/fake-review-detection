@@ -74,7 +74,7 @@ st.markdown("## Confusion Matrix")
 
 cm = confusion_matrix(y, y_pred)
 
-fig1, ax1 = plt.subplots(figsize=(4, 3))
+fig1, ax1 = plt.subplots(figsize=(10, 9))
 ax1.imshow(cm, cmap="Blues")
 
 for i in range(cm.shape[0]):
@@ -94,7 +94,7 @@ st.markdown("## ROC Curve")
 fpr, tpr, _ = roc_curve(y, prob_hybrid)
 roc_auc = auc(fpr, tpr)
 
-fig2, ax2 = plt.subplots(figsize=(4, 3))
+fig2, ax2 = plt.subplots(figsize=(10, 9))
 ax2.plot(fpr, tpr, label=f"AUC = {roc_auc:.2f}")
 ax2.plot([0, 1], [0, 1], linestyle="--")
 
